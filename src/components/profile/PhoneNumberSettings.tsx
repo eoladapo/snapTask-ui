@@ -236,6 +236,14 @@ const PhoneNumberSettings: React.FC<PhoneNumberSettingsProps> = ({
               </div>
             </div>
             <div className="flex gap-2">
+              {!phoneVerified && (
+                <button
+                  onClick={() => setShowVerificationInput(true)}
+                  className="px-3 py-1.5 text-sm text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-500/10 rounded-lg transition-colors font-medium"
+                >
+                  Verify
+                </button>
+              )}
               <button
                 onClick={() => setIsEditing(true)}
                 className="px-3 py-1.5 text-sm text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-lg transition-colors"

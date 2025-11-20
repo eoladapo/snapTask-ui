@@ -1,6 +1,6 @@
-@import "tailwindcss";
-
-@variant dark (.dark &);
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 /* Light mode (default) */
 :root,

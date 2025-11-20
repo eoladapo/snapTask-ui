@@ -20,6 +20,8 @@ interface LayoutProps {
   onViewChange?: (view: ViewType) => void;
   taskCounts?: TaskCounts;
   onCreateTask?: () => void;
+  selectedCategoryId?: string | null;
+  onCategorySelect?: (categoryId: string | null) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -31,6 +33,8 @@ const Layout: React.FC<LayoutProps> = ({
   onViewChange = () => {},
   taskCounts = { all: 0, pending: 0, 'in-progress': 0, completed: 0 },
   onCreateTask = () => {},
+  selectedCategoryId,
+  onCategorySelect = () => {},
 }) => {
   // State management for chat open/close
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -58,6 +62,8 @@ const Layout: React.FC<LayoutProps> = ({
           onViewChange={onViewChange}
           taskCounts={taskCounts}
           onCreateTask={onCreateTask}
+          selectedCategoryId={selectedCategoryId}
+          onCategorySelect={onCategorySelect}
         />
       )}
 

@@ -4,7 +4,10 @@ import Input from '../common/Input';
 import Button from '../common/Button';
 import { useTasks } from '../../hooks/useTasks';
 import { useToastContext } from '../../context/ToastContext';
+import { categoryService } from '../../services/categoryService';
+import CategoryBadge from '../categories/CategoryBadge';
 import type { Task } from '../../types/task.types';
+import type { Category } from '../../types/category.types';
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -18,10 +21,32 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed'>('pending');
+  const [categoryId, setCategoryId] = useState<string>('');
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; general?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditMode = !!task;
+
+  // Fetch categories when modal opens
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (isOpen) {
+        try {
+          setLoadingCategories(true);
+          const fetchedCategories = await categoryService.getAllCategories();
+          setCategories(fetchedCategories);
+        } catch (error) {
+          console.error('Failed to fetch categories:', error);
+        } finally {
+          setLoadingCategories(false);
+        }
+      }
+    };
+
+    fetchCategories();
+  }, [isOpen]);
 
   // Populate form when editing existing task
   useEffect(() => {
@@ -29,11 +54,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
       setTitle(task.title);
       setDescription(task.description);
       setStatus(task.status);
+      setCategoryId(task.category || '');
     } else {
       // Reset form for new task
       setTitle('');
       setDescription('');
       setStatus('pending');
+      setCategoryId('');
     }
     setErrors({});
   }, [task, isOpen]);
@@ -66,6 +93,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
           title: title.trim(),
           description: description.trim(),
           status,
+          category: categoryId || null,
         });
         showSuccess('Task updated successfully!');
       } else {
@@ -74,6 +102,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
           title: title.trim(),
           description: description.trim(),
           status,
+          category: categoryId || null,
         });
         showSuccess('Task created successfully!');
       }
@@ -93,9 +122,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
     setTitle('');
     setDescription('');
     setStatus('pending');
+    setCategoryId('');
     setErrors({});
     onClose();
   };
+
+  // Get selected category for badge display
+  const selectedCategory = categories.find((cat) => cat._id === categoryId);
 
   return (
     <Modal
@@ -153,6 +186,51 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
               resize-none
             "
           />
+        </div>
+
+        {/* Category Selector */}
+        <div className="w-full">
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
+          >
+            Category
+          </label>
+          <select
+            id="category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            disabled={loadingCategories}
+            className="
+              w-full px-4 py-3
+              rounded-[var(--radius-button)]
+              border-2 border-[var(--color-border)]
+              bg-white
+              text-[var(--color-text-primary)]
+              transition-all duration-200
+              focus:outline-none focus:border-[var(--color-purple-primary)] focus:ring-2 focus:ring-[var(--color-purple-light)] focus:ring-opacity-20
+              cursor-pointer
+              disabled:opacity-50 disabled:cursor-not-allowed
+            "
+          >
+            <option value="">Uncategorized</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          
+          {/* Selected Category Badge Preview */}
+          {selectedCategory && (
+            <div className="mt-2">
+              <CategoryBadge
+                name={selectedCategory.name}
+                color={selectedCategory.color}
+                size="sm"
+              />
+            </div>
+          )}
         </div>
 
         {/* Status Selector */}

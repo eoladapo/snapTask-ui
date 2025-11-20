@@ -279,6 +279,18 @@ const response = await api.get('/tasks');
 - Check if `dark` class is on `<html>` element
 - Verify Tailwind CSS is properly configured
 
+## User Guides
+
+Learn how to use SnapTask features:
+
+- **[Task Categories Guide](../USER_GUIDE_CATEGORIES.md)** - Organize tasks with custom categories
+- **[WhatsApp Notifications Guide](../USER_GUIDE_WHATSAPP.md)** - Set up task reminders on WhatsApp
+
+## Developer Documentation
+
+- **[API Documentation](../backend/API_DOCUMENTATION.md)** - Backend API reference
+- **[Environment Variables](../ENVIRONMENT_VARIABLES.md)** - Configuration guide
+
 ## License
 
 ISC

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, Target, Award, Calendar } from 'lucide-react';
+import { TrendingUp, Target, Award, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { userService, type Statistics } from '../../services/userService';
 import { useToastContext } from '../../context/ToastContext';
 import StatsCard from './StatsCard';
+import { CategoryStatistics } from '../categories';
 
 type PeriodView = 'weekly' | 'monthly' | 'yearly';
 
@@ -11,6 +12,7 @@ const StatisticsView: React.FC = () => {
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activePeriod, setActivePeriod] = useState<PeriodView>('weekly');
+  const [showCategoryStats, setShowCategoryStats] = useState(true);
   const { showError } = useToastContext();
 
   useEffect(() => {
@@ -209,6 +211,40 @@ const StatisticsView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Category Statistics Section */}
+      {statistics.categoryBreakdown && statistics.categoryBreakdown.length > 0 && (
+        <div className="bg-white dark:bg-[#1e293b] rounded-xl p-6 border border-gray-200 dark:border-[#334155]">
+          {/* Collapsible Header */}
+          <button
+            onClick={() => setShowCategoryStats(!showCategoryStats)}
+            className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              Category Statistics
+            </h2>
+            {showCategoryStats ? (
+              <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            )}
+          </button>
+
+          {/* Collapsible Content */}
+          <AnimatePresence>
+            {showCategoryStats && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CategoryStatistics categoryBreakdown={statistics.categoryBreakdown} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </motion.div>
   );
 };

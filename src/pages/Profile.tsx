@@ -1,19 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Edit2, Save, X, TrendingUp, Calendar, Target, Award } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import { userService, type UserProfile, type Statistics } from '../services/userService';
 import { useToastContext } from '../context/ToastContext';
+import { useTasks } from '../hooks/useTasks';
 import StatisticsChart from '../components/profile/StatisticsChart';
 import StatsCard from '../components/profile/StatsCard';
+import PhoneNumberSettings from '../components/profile/PhoneNumberSettings';
+import NotificationPreferences from '../components/profile/NotificationPreferences';
+import NotificationHistory from '../components/notifications/NotificationHistory';
+import type { ViewType } from '../components/layout/Sidebar';
 
 const Profile: React.FC = () => {
+  const navigate = useNavigate();
+  const { tasks } = useTasks();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { showSuccess, showError } = useToastContext();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('taskapp_sidebar_state');
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
 
   const [formData, setFormData] = useState({
     username: '',
@@ -44,6 +62,16 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handlePhoneUpdate = () => {
+    // Reload profile data to get updated phone information
+    loadProfileData();
+  };
+
+  const handlePreferencesUpdate = () => {
+    // Reload profile data if needed
+    loadProfileData();
+  };
+
   const handleEdit = () => {
     setIsEditing(true);
   };
@@ -72,9 +100,58 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleViewChange = (view: ViewType) => {
+    if (view === 'profile') {
+      // Already on profile page
+      return;
+    } else if (view === 'statistics') {
+      // Stay on profile page but could scroll to statistics section
+      return;
+    } else {
+      // Navigate back to dashboard with the selected view
+      navigate('/dashboard');
+    }
+  };
+
+  const handleCategorySelect = () => {
+    // Navigate back to dashboard when category is selected
+    navigate('/dashboard');
+  };
+
+  const handleCreateTask = () => {
+    // Navigate back to dashboard to create task
+    navigate('/dashboard');
+  };
+
+  // Calculate task counts
+  const taskCounts = {
+    all: tasks.length,
+    pending: tasks.filter((t) => t.status === 'pending').length,
+    'in-progress': tasks.filter((t) => t.status === 'in-progress').length,
+    completed: tasks.filter((t) => t.status === 'completed').length,
+  };
+
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('taskapp_sidebar_state', JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
+
   if (loading) {
     return (
-      <Layout>
+      <Layout
+        showSidebar={true}
+        isSidebarOpen={isSidebarOpen}
+        onSidebarToggle={handleSidebarToggle}
+        activeView="profile"
+        onViewChange={handleViewChange}
+        taskCounts={taskCounts}
+        onCreateTask={handleCreateTask}
+        onCategorySelect={handleCategorySelect}
+      >
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         </div>
@@ -83,7 +160,16 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <Layout>
+    <Layout
+      showSidebar={true}
+      isSidebarOpen={isSidebarOpen}
+      onSidebarToggle={handleSidebarToggle}
+      activeView="profile"
+      onViewChange={handleViewChange}
+      taskCounts={taskCounts}
+      onCreateTask={handleCreateTask}
+      onCategorySelect={handleCategorySelect}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -195,6 +281,22 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Phone Number Settings */}
+        <PhoneNumberSettings
+          initialPhoneNumber={profile?.phoneNumber}
+          initialPhoneVerified={profile?.phoneVerified}
+          onPhoneUpdate={handlePhoneUpdate}
+        />
+
+        {/* Notification Preferences */}
+        <NotificationPreferences
+          phoneVerified={profile?.phoneVerified}
+          onPreferencesUpdate={handlePreferencesUpdate}
+        />
+
+        {/* Notification History */}
+        <NotificationHistory />
 
         {/* Statistics Overview */}
         {statistics && (

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
+import { CategoryProvider } from './context/CategoryContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Onboarding, Login, Register, Dashboard } from './pages';
@@ -44,9 +45,11 @@ function App() {
         <ToastProvider>
           <AuthProvider>
             <TaskProvider>
-              <Router>
-                <AnimatedRoutes />
-              </Router>
+              <CategoryProvider>
+                <Router>
+                  <AnimatedRoutes />
+                </Router>
+              </CategoryProvider>
             </TaskProvider>
           </AuthProvider>
         </ToastProvider>

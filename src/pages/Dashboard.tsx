@@ -6,6 +6,7 @@ import TaskList from '../components/tasks/TaskList';
 import TaskForm from '../components/tasks/TaskForm';
 import ProfileView from '../components/profile/ProfileView';
 import StatisticsView from '../components/profile/StatisticsView';
+import { CategoryFilter } from '../components/categories';
 import { useTasks } from '../hooks/useTasks';
 import { useToastContext } from '../context/ToastContext';
 import type { Task } from '../types/task.types';
@@ -17,6 +18,8 @@ export const Dashboard: React.FC = () => {
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [activeView, setActiveView] = useState<ViewType>('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
     // Default to open on desktop, closed on mobile
     if (typeof window !== 'undefined') {
@@ -29,30 +32,55 @@ export const Dashboard: React.FC = () => {
     return true;
   });
 
-  // Fetch tasks on component mount
+  // Fetch tasks on component mount and when category filter changes
   useEffect(() => {
     const loadTasks = async () => {
       try {
-        await fetchTasks();
+        // If no categories selected or multiple categories selected, fetch all tasks
+        // We'll filter on the client side for multi-select
+        if (selectedCategories.length === 0 || selectedCategories.length > 1) {
+          await fetchTasks();
+        } else {
+          // Single category selected - use server-side filtering
+          const categoryId = selectedCategories[0] === 'uncategorized' ? 'null' : selectedCategories[0];
+          await fetchTasks(categoryId);
+        }
       } catch (err) {
         // Error is already set in context, just show toast
         showError('Failed to load tasks. Please try again.');
       }
     };
     loadTasks();
-  }, [fetchTasks, showError]);
+  }, [selectedCategories, fetchTasks, showError]);
 
   // Save sidebar state to localStorage
   useEffect(() => {
     localStorage.setItem('taskapp_sidebar_state', JSON.stringify(isSidebarOpen));
   }, [isSidebarOpen]);
 
-  // Filter tasks based on active view (only for task filters)
+  // Filter tasks based on active view and category selection
   const filteredTasks = useMemo(() => {
     if (activeView === 'profile' || activeView === 'statistics') return [];
-    if (activeView === 'all') return tasks;
-    return tasks.filter((task) => task.status === activeView);
-  }, [tasks, activeView]);
+    
+    let filtered = tasks;
+    
+    // Apply status filter
+    if (activeView !== 'all') {
+      filtered = filtered.filter((task) => task.status === activeView);
+    }
+    
+    // Apply category filter (client-side for multi-select)
+    if (selectedCategories.length > 1) {
+      filtered = filtered.filter((task) => {
+        if (selectedCategories.includes('uncategorized') && !task.category) {
+          return true;
+        }
+        return task.category && selectedCategories.includes(task.category);
+      });
+    }
+    
+    return filtered;
+  }, [tasks, activeView, selectedCategories]);
 
   // Calculate task counts
   const taskCounts = useMemo(
@@ -106,6 +134,20 @@ export const Dashboard: React.FC = () => {
     setActiveView(view);
   };
 
+  const handleCategoryFilterChange = (categoryIds: string[]) => {
+    setSelectedCategories(categoryIds);
+  };
+
+  const handleCategorySelect = (categoryId: string | null) => {
+    setSelectedCategoryId(categoryId);
+    // Also update selectedCategories for compatibility
+    if (categoryId === null) {
+      setSelectedCategories(['uncategorized']);
+    } else {
+      setSelectedCategories([categoryId]);
+    }
+  };
+
   return (
     <Layout
       showSidebar={true}
@@ -115,6 +157,8 @@ export const Dashboard: React.FC = () => {
       onViewChange={handleViewChange}
       taskCounts={taskCounts}
       onCreateTask={handleCreateTask}
+      selectedCategoryId={selectedCategoryId}
+      onCategorySelect={handleCategorySelect}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -125,15 +169,24 @@ export const Dashboard: React.FC = () => {
       >
         {/* Page Header - Only show for task views */}
         {activeView !== 'profile' && activeView !== 'statistics' && (
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                My Tasks
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
-                Manage your tasks and stay productive
-              </p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+                  My Tasks
+                </h1>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
+                  Manage your tasks and stay productive
+                </p>
+              </div>
             </div>
+            
+            {/* Category Filter */}
+            <CategoryFilter
+              tasks={tasks}
+              selectedCategories={selectedCategories}
+              onFilterChange={handleCategoryFilterChange}
+            />
           </div>
         )}
 
@@ -149,7 +202,7 @@ export const Dashboard: React.FC = () => {
                 <h3 className="font-semibold mb-1 text-sm sm:text-base">Error loading tasks</h3>
                 <p className="text-xs sm:text-sm break-words">{error}</p>
                 <button
-                  onClick={fetchTasks}
+                  onClick={() => fetchTasks()}
                   className="mt-2 text-xs sm:text-sm font-medium text-red-700 hover:text-red-800 underline min-h-[44px] py-2 touch-manipulation"
                 >
                   Try again
@@ -180,7 +233,7 @@ export const Dashboard: React.FC = () => {
                 onEdit={handleEditTask}
                 onDelete={handleDeleteTask}
                 onStatusChange={handleStatusChange}
-                onRetry={fetchTasks}
+                onRetry={() => fetchTasks()}
                 activeFilter={activeView === 'all' || activeView === 'pending' || activeView === 'in-progress' || activeView === 'completed' ? activeView : 'all'}
               />
             </motion.div>

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: snaptask-ui
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist

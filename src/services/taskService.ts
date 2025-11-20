@@ -4,10 +4,12 @@ import type { Task, CreateTaskData, UpdateTaskData } from '../types/task.types';
 export const taskService = {
   /**
    * Get all tasks for the authenticated user
+   * @param categoryId - Optional category ID to filter tasks
    * @returns Promise with array of tasks
    */
-  async getAllTasks(): Promise<Task[]> {
-    const response = await api.get<{ message: string; tasks: Task[] }>('/task');
+  async getAllTasks(categoryId?: string): Promise<Task[]> {
+    const params = categoryId ? { category: categoryId } : {};
+    const response = await api.get<{ message: string; tasks: Task[] }>('/task', { params });
     // Backend returns { message, tasks } so we need to extract the tasks array
     return response.data.tasks;
   },

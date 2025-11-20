@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Clock, Rocket, CheckCircle, LayoutGrid, X, Menu, User, TrendingUp } from 'lucide-react';
+import { Plus, Clock, Rocket, CheckCircle, LayoutGrid, X, Menu, User, TrendingUp, Folder } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { userService, type Statistics } from '../../services/userService';
+import { useCategories } from '../../hooks/useCategories';
 
 export type TaskFilter = 'all' | 'pending' | 'in-progress' | 'completed';
-export type ViewType = TaskFilter | 'profile' | 'statistics';
+export type ViewType = TaskFilter | 'profile' | 'statistics' | 'category';
 
 interface TaskCounts {
   all: number;
@@ -20,6 +22,8 @@ interface SidebarProps {
   onViewChange: (view: ViewType) => void;
   taskCounts: TaskCounts;
   onCreateTask: () => void;
+  selectedCategoryId?: string | null;
+  onCategorySelect: (categoryId: string | null) => void;
 }
 
 interface NavigationItem {
@@ -38,8 +42,28 @@ const Sidebar: React.FC<SidebarProps> = ({
   onViewChange,
   taskCounts,
   onCreateTask,
+  selectedCategoryId,
+  onCategorySelect,
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [statistics, setStatistics] = useState<Statistics | null>(null);
+  const { categories, loading: categoriesLoading, createCategory, fetchCategories } = useCategories();
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#6366f1');
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        await fetchCategories();
+      } catch (error) {
+        console.error('Failed to load categories');
+      }
+    };
+    loadCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -180,7 +204,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation */}
-        <nav className="px-4 py-6 space-y-2 flex-1">
+        <nav className="px-4 py-6 space-y-2 flex-1 overflow-y-auto">
           {navigationItems.map((item, index) => {
             const isActive = item.action === 'filter' && activeView === item.id;
             const isCreateButton = item.action === 'create';
@@ -232,6 +256,147 @@ const Sidebar: React.FC<SidebarProps> = ({
               </React.Fragment>
             );
           })}
+
+          {/* Categories Section */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Categories
+              </span>
+            </div>
+
+            {/* Uncategorized */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                onCategorySelect(null);
+                onViewChange('category');
+                if (window.innerWidth < 768) {
+                  onToggle();
+                }
+              }}
+              className={`
+                w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
+                transition-all duration-200 min-h-[40px]
+                ${
+                  activeView === 'category' && selectedCategoryId === null
+                    ? 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-semibold border-l-4 border-[var(--color-purple-primary)]'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
+                }
+              `}
+            >
+              <Folder className="w-4 h-4 text-gray-500" />
+              <span className="flex-1 text-left text-sm">Uncategorized</span>
+            </motion.button>
+
+            {/* User Categories */}
+            {!categoriesLoading && categories.map((category) => (
+              <motion.button
+                key={category._id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  onCategorySelect(category._id);
+                  onViewChange('category');
+                  if (window.innerWidth < 768) {
+                    onToggle();
+                  }
+                }}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
+                  transition-all duration-200 min-h-[40px]
+                  ${
+                    activeView === 'category' && selectedCategoryId === category._id
+                      ? 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-semibold border-l-4 border-[var(--color-purple-primary)]'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
+                  }
+                `}
+              >
+                <div
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: category.color }}
+                />
+                <span className="flex-1 text-left text-sm truncate">{category.name}</span>
+              </motion.button>
+            ))}
+
+            {/* Add Category Button */}
+            {!showCategoryForm ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowCategoryForm(true)}
+                className="
+                  w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
+                  text-[var(--color-purple-primary)] hover:bg-purple-50 dark:hover:bg-purple-900/20
+                  transition-all duration-200 min-h-[40px] mt-2
+                "
+              >
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-medium">Add Category</span>
+              </motion.button>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg space-y-2"
+              >
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Category name"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg
+                    bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                    focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newCategoryName.trim()) {
+                      createCategory({ name: newCategoryName.trim(), color: newCategoryColor });
+                      setNewCategoryName('');
+                      setNewCategoryColor('#6366f1');
+                      setShowCategoryForm(false);
+                    } else if (e.key === 'Escape') {
+                      setShowCategoryForm(false);
+                      setNewCategoryName('');
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={newCategoryColor}
+                    onChange={(e) => setNewCategoryColor(e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer"
+                  />
+                  <button
+                    onClick={() => {
+                      if (newCategoryName.trim()) {
+                        createCategory({ name: newCategoryName.trim(), color: newCategoryColor });
+                        setNewCategoryName('');
+                        setNewCategoryColor('#6366f1');
+                        setShowCategoryForm(false);
+                      }
+                    }}
+                    className="flex-1 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCategoryForm(false);
+                      setNewCategoryName('');
+                    }}
+                    className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </div>
         </nav>
 
         {/* Profile & Stats Section - Bottom */}
@@ -262,7 +427,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                onViewChange('profile');
+                navigate('/profile');
                 if (window.innerWidth < 768) {
                   onToggle();
                 }
@@ -271,7 +436,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 w-full flex items-center gap-3 px-4 py-3 rounded-lg
                 transition-all duration-200 min-h-[44px]
                 ${
-                  activeView === 'profile'
+                  location.pathname === '/profile'
                     ? 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-semibold border-l-4 border-[var(--color-purple-primary)]'
                     : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
                 }

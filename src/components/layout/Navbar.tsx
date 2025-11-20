@@ -27,6 +27,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
     logout();
     setIsMobileMenuOpen(false);
     setIsDropdownOpen(false);
+    // Navigate to onboarding page
+    navigate('/', { replace: true });
   };
 
   const toggleMobileMenu = () => {

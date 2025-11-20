@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (.dark &);
+
 /* Light mode (default) */
 :root,
 .light {

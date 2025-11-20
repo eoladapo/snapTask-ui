@@ -51,7 +51,13 @@ export const Register: React.FC = () => {
 
   const validateForm = (): boolean => {
     const usernameError = getRequiredError(formData.username, 'Username');
-    const emailError = getEmailError(formData.email);
+    let emailError = getEmailError(formData.email);
+    
+    // Additional Gmail validation
+    if (!emailError && !formData.email.toLowerCase().endsWith('@gmail.com')) {
+      emailError = 'Only Gmail addresses (@gmail.com) are allowed';
+    }
+    
     const passwordError = getPasswordError(formData.password, 6);
 
     setErrors({
@@ -143,18 +149,23 @@ export const Register: React.FC = () => {
                 required
               />
 
-              <Input
-                label="Email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-                placeholder="Enter your email"
-                icon={<Mail size={20} />}
-                autoComplete="email"
-                required
-              />
+              <div>
+                <Input
+                  label="Email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  placeholder="your.name@gmail.com"
+                  icon={<Mail size={20} />}
+                  autoComplete="email"
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Only Gmail addresses (@gmail.com) are allowed
+                </p>
+              </div>
 
               <Input
                 label="Password"

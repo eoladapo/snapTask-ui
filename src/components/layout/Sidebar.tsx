@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Clock, Rocket, CheckCircle, LayoutGrid, X, Menu, User, TrendingUp, Folder } from 'lucide-react';
+import { Plus, Clock, Rocket, CheckCircle, LayoutGrid, X, Menu, User, TrendingUp, Folder, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { userService, type Statistics } from '../../services/userService';
 import { useCategories } from '../../hooks/useCategories';
+import { categoryService } from '../../services/categoryService';
 
 export type TaskFilter = 'all' | 'pending' | 'in-progress' | 'completed';
 export type ViewType = TaskFilter | 'profile' | 'statistics' | 'category';
@@ -128,6 +129,34 @@ const Sidebar: React.FC<SidebarProps> = ({
     // Close sidebar on mobile after selection
     if (window.innerWidth < 768) {
       onToggle();
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
+    // Confirm deletion
+    const confirmMessage = `Delete "${categoryName}" category? Tasks in this category will be moved to "Uncategorized".`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      // Delete the category
+      await categoryService.deleteCategory(categoryId);
+      
+      // If this was the selected category, clear selection
+      if (selectedCategoryId === categoryId) {
+        onCategorySelect(null);
+      }
+      
+      // Refresh categories
+      await fetchCategories();
+      
+      // Show success message
+      console.log(`Category "${categoryName}" deleted successfully!`);
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+      alert('Failed to delete category. Please try again.');
     }
   };
 
@@ -292,33 +321,50 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {/* User Categories */}
             {!categoriesLoading && categories.map((category) => (
-              <motion.button
+              <motion.div
                 key={category._id}
                 whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  onCategorySelect(category._id);
-                  onViewChange('category');
-                  if (window.innerWidth < 768) {
-                    onToggle();
-                  }
-                }}
-                className={`
-                  w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
-                  transition-all duration-200 min-h-[40px]
-                  ${
-                    activeView === 'category' && selectedCategoryId === category._id
-                      ? 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-semibold border-l-4 border-[var(--color-purple-primary)]'
-                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
-                  }
-                `}
+                className="relative group"
               >
-                <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: category.color }}
-                />
-                <span className="flex-1 text-left text-sm truncate">{category.name}</span>
-              </motion.button>
+                <button
+                  onClick={() => {
+                    onCategorySelect(category._id);
+                    onViewChange('category');
+                    if (window.innerWidth < 768) {
+                      onToggle();
+                    }
+                  }}
+                  className={`
+                    w-full flex items-center gap-3 px-4 py-2.5 rounded-lg
+                    transition-all duration-200 min-h-[40px]
+                    ${
+                      activeView === 'category' && selectedCategoryId === category._id
+                        ? 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-semibold border-l-4 border-[var(--color-purple-primary)]'
+                        : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
+                    }
+                  `}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: category.color }}
+                  />
+                  <span className="flex-1 text-left text-sm truncate">{category.name}</span>
+                </button>
+                
+                {/* Delete Button (shows on hover) */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCategory(category._id, category.name);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md
+                    opacity-0 group-hover:opacity-100 transition-opacity
+                    hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
+                  title="Delete category"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </motion.div>
             ))}
 
             {/* Add Category Button */}

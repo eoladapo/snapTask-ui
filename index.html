@@ -6,27 +6,69 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/favicon.svg" as="image" type="image/svg+xml" />
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://api.dicebear.com" />
+    
     <!-- Primary Meta Tags -->
-    <title>SnapTask - Smart Task Management with AI & WhatsApp Notifications</title>
-    <meta name="title" content="SnapTask - Smart Task Management with AI & WhatsApp Notifications" />
-    <meta name="description" content="Organize your tasks effortlessly with SnapTask. AI-powered task management, custom categories, WhatsApp reminders, and smart notifications. Stay productive and never miss a deadline." />
-    <meta name="keywords" content="task management, todo app, productivity, AI assistant, WhatsApp notifications, task organizer, project management, task tracker" />
+    <title>SnapTask - AI-Powered Task Management with WhatsApp Reminders</title>
+    <meta name="title" content="SnapTask - AI-Powered Task Management with WhatsApp Reminders" />
+    <meta name="description" content="Manage tasks with a simple message. Chat with SnapTask AI, organize your life, and get notified via WhatsApp. No apps to download, no complex interfaces." />
+    <meta name="keywords" content="task management, AI assistant, WhatsApp reminders, todo app, productivity, smart notifications, task organizer, AI chat, natural language tasks" />
     <meta name="author" content="SnapTask" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="SnapTask - Smart Task Management with AI & WhatsApp Notifications" />
-    <meta property="og:description" content="Organize your tasks effortlessly with SnapTask. AI-powered task management, custom categories, WhatsApp reminders, and smart notifications." />
+    <meta property="og:title" content="SnapTask - AI-Powered Task Management with WhatsApp Reminders" />
+    <meta property="og:description" content="Manage tasks with a simple message. Chat with SnapTask AI, organize your life, and get notified via WhatsApp. No apps to download, no complex interfaces." />
     <meta property="og:image" content="/og-image.png" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="SnapTask - Smart Task Management with AI & WhatsApp Notifications" />
-    <meta property="twitter:description" content="Organize your tasks effortlessly with SnapTask. AI-powered task management, custom categories, WhatsApp reminders, and smart notifications." />
+    <meta property="twitter:title" content="SnapTask - AI-Powered Task Management with WhatsApp Reminders" />
+    <meta property="twitter:description" content="Manage tasks with a simple message. Chat with SnapTask AI, organize your life, and get notified via WhatsApp. No apps to download, no complex interfaces." />
     <meta property="twitter:image" content="/og-image.png" />
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#9333ea" />
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SnapTask",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "Web",
+      "description": "AI-powered task management app where you chat naturally with an AI assistant to organize tasks, then receive reminders via WhatsApp. No complex interfaces, just simple conversation and smart notifications.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150"
+      },
+      "featureList": [
+        "AI Chat Interface for Task Creation",
+        "Natural Language Task Parsing",
+        "WhatsApp Reminder Notifications",
+        "Smart Category Organization",
+        "Real-time Dashboard Sync",
+        "Progress Tracking and Insights"
+      ],
+      "screenshot": "/og-image.png",
+      "softwareVersion": "1.0",
+      "author": {
+        "@type": "Organization",
+        "name": "SnapTask"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

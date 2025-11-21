@@ -5,7 +5,7 @@ import { TaskProvider } from './context/TaskContext';
 import { CategoryProvider } from './context/CategoryContext';
 import { ToastProvider } from './context/ToastContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { Onboarding, Login, Register, Dashboard } from './pages';
+import { LandingPage, Login, Register, Dashboard } from './pages';
 import Profile from './pages/Profile';
 import { ProtectedRoute, PublicRoute } from './components/routing';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -16,8 +16,8 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Public route - Onboarding */}
-        <Route path="/" element={<Onboarding />} />
+        {/* Public route - Landing Page */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Public routes - Auth pages (redirect to dashboard if authenticated) */}
         <Route element={<PublicRoute />}>
@@ -31,7 +31,7 @@ function AnimatedRoutes() {
           <Route path="/profile" element={<Profile />} />
         </Route>
 
-        {/* Fallback route - redirect unknown paths to Onboarding */}
+        {/* Fallback route - redirect unknown paths to Landing Page */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>

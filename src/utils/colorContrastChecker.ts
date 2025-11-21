@@ -303,7 +303,7 @@ export const colorBlindnessInfo = {
  * Generate a contrast report
  */
 export function generateContrastReport(): string {
-  const { results, allPass, summary } = verifyLandingPageContrast();
+  const { results, summary } = verifyLandingPageContrast();
   
   let report = '# Color Contrast Verification Report\n\n';
   report += `## Summary\n${summary}\n\n`;

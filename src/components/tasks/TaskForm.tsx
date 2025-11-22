@@ -219,6 +219,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
             type="date"
             id="taskDate"
             value={formatDateForInput(selectedTaskDate)}
+            min={formatDateForInput(new Date())} // Disable past dates
             onChange={(e) => {
               // Parse the date in local timezone
               const [year, month, day] = e.target.value.split('-').map(Number);
@@ -237,7 +238,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
             "
           />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Choose which day this task belongs to
+            Choose which day this task belongs to (today or future dates only)
           </p>
         </div>
 

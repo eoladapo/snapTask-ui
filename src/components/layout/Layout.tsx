@@ -22,6 +22,7 @@ interface LayoutProps {
   onCreateTask?: () => void;
   selectedCategoryId?: string | null;
   onCategorySelect?: (categoryId: string | null) => void;
+  disableCreateTask?: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -35,6 +36,7 @@ const Layout: React.FC<LayoutProps> = ({
   onCreateTask = () => {},
   selectedCategoryId,
   onCategorySelect = () => {},
+  disableCreateTask = false,
 }) => {
   // State management for chat open/close
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -64,6 +66,7 @@ const Layout: React.FC<LayoutProps> = ({
           onCreateTask={onCreateTask}
           selectedCategoryId={selectedCategoryId}
           onCategorySelect={onCategorySelect}
+          disableCreateTask={disableCreateTask}
         />
       )}
 

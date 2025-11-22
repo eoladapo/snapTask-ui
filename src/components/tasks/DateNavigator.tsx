@@ -13,6 +13,7 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ selectedDate, onDateChang
   const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   
   const isToday = selectedDate.getTime() === todayLocal.getTime();
+  const isPastDate = selectedDate.getTime() < todayLocal.getTime();
   
   const formatDate = (date: Date) => {
     const options: Intl.DateTimeFormatOptions = { 
@@ -57,9 +58,16 @@ const DateNavigator: React.FC<DateNavigatorProps> = ({ selectedDate, onDateChang
       <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-2">
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-[var(--color-purple-primary)] flex-shrink-0" />
-          <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 text-center">
-            {formatDate(selectedDate)}
-          </span>
+          <div className="flex flex-col items-center">
+            <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 text-center">
+              {formatDate(selectedDate)}
+            </span>
+            {isPastDate && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+                (Past date - view only)
+              </span>
+            )}
+          </div>
         </div>
         
         {!isToday && (

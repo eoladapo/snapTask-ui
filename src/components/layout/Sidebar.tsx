@@ -25,6 +25,7 @@ interface SidebarProps {
   onCreateTask: () => void;
   selectedCategoryId?: string | null;
   onCategorySelect: (categoryId: string | null) => void;
+  disableCreateTask?: boolean;
 }
 
 interface NavigationItem {
@@ -45,6 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onCreateTask,
   selectedCategoryId,
   onCategorySelect,
+  disableCreateTask = false,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -246,9 +248,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 )}
 
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: isCreateButton && disableCreateTask ? 1 : 1.02 }}
+                  whileTap={{ scale: isCreateButton && disableCreateTask ? 1 : 0.98 }}
                   onClick={() => handleItemClick(item)}
+                  disabled={isCreateButton && disableCreateTask}
+                  title={isCreateButton && disableCreateTask ? 'Cannot create tasks for past dates' : undefined}
                   className={`
                     w-full flex items-center gap-3 px-4 py-3 rounded-lg
                     transition-all duration-200 min-h-[44px]
@@ -256,7 +260,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                       isActive
                         ? 'bg-[var(--color-sidebar-item-active-bg)] text-[var(--color-sidebar-item-active-text)] font-semibold border-l-4 border-[var(--color-purple-primary)]'
                         : isCreateButton
-                        ? 'bg-[var(--color-purple-primary)] text-white hover:bg-[var(--color-purple-dark)] font-medium'
+                        ? disableCreateTask
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
+                          : 'bg-[var(--color-purple-primary)] text-white hover:bg-[var(--color-purple-dark)] font-medium'
                         : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
                     }
                   `}

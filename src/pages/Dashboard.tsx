@@ -116,6 +116,15 @@ export const Dashboard: React.FC = () => {
   }, [tasks, selectedDate]);
 
   const handleCreateTask = () => {
+    // Check if trying to create task for past date
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    if (selectedDate.getTime() < todayLocal.getTime()) {
+      showError('Cannot create tasks for past dates. Please select today or a future date.');
+      return;
+    }
+    
     setSelectedTask(null);
     setIsTaskFormOpen(true);
   };
@@ -174,6 +183,13 @@ export const Dashboard: React.FC = () => {
     setSelectedDate(date);
   };
 
+  // Check if selected date is in the past
+  const isPastDate = useMemo(() => {
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return selectedDate.getTime() < todayLocal.getTime();
+  }, [selectedDate]);
+
   return (
     <Layout
       showSidebar={true}
@@ -185,6 +201,7 @@ export const Dashboard: React.FC = () => {
       onCreateTask={handleCreateTask}
       selectedCategoryId={selectedCategoryId}
       onCategorySelect={handleCategorySelect}
+      disableCreateTask={isPastDate}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -273,32 +290,35 @@ export const Dashboard: React.FC = () => {
         </AnimatePresence>
 
         {/* Floating Action Button - Hidden on desktop since sidebar has Create Task button */}
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleCreateTask}
-          className="
-            md:hidden
-            fixed bottom-6 right-6 sm:bottom-8 sm:right-8
-            w-14 h-14 sm:w-16 sm:h-16
-            bg-[var(--color-purple-primary)]
-            hover:bg-[var(--color-purple-dark)]
-            text-white
-            rounded-full
-            shadow-lg hover:shadow-xl
-            flex items-center justify-center
-            transition-colors duration-200
-            focus:outline-none focus:ring-4 focus:ring-[var(--color-purple-light)] focus:ring-opacity-50
-            z-50
-            touch-manipulation
-          "
-          aria-label="Create new task"
-        >
-          <Plus size={24} strokeWidth={2.5} className="sm:w-7 sm:h-7" />
-        </motion.button>
+        {/* Only show if not viewing past date */}
+        {!isPastDate && activeView !== 'profile' && activeView !== 'statistics' && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleCreateTask}
+            className="
+              md:hidden
+              fixed bottom-6 right-6 sm:bottom-8 sm:right-8
+              w-14 h-14 sm:w-16 sm:h-16
+              bg-[var(--color-purple-primary)]
+              hover:bg-[var(--color-purple-dark)]
+              text-white
+              rounded-full
+              shadow-lg hover:shadow-xl
+              flex items-center justify-center
+              transition-colors duration-200
+              focus:outline-none focus:ring-4 focus:ring-[var(--color-purple-light)] focus:ring-opacity-50
+              z-50
+              touch-manipulation
+            "
+            aria-label="Create new task"
+          >
+            <Plus size={24} strokeWidth={2.5} className="sm:w-7 sm:h-7" />
+          </motion.button>
+        )}
 
         {/* Task Form Modal */}
         <TaskForm

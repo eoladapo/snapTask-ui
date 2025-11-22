@@ -96,13 +96,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusCha
 
       {/* Action buttons */}
       <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-[#334155]">
-        <button
-          onClick={handleStatusToggle}
-          disabled={isUpdatingStatus}
-          className="flex-1 px-3 sm:px-4 py-2.5 bg-[var(--color-purple-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-purple-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
-        >
-          {isUpdatingStatus ? 'Updating...' : currentStatus.nextLabel}
-        </button>
+        {/* Hide status change button for completed tasks */}
+        {task.status !== 'completed' && (
+          <button
+            onClick={handleStatusToggle}
+            disabled={isUpdatingStatus}
+            className="flex-1 px-3 sm:px-4 py-2.5 bg-[var(--color-purple-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-purple-dark)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
+          >
+            {isUpdatingStatus ? 'Updating...' : currentStatus.nextLabel}
+          </button>
+        )}
         
         <button
           onClick={() => onEdit(task)}

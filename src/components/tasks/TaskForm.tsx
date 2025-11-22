@@ -13,9 +13,10 @@ interface TaskFormProps {
   isOpen: boolean;
   onClose: () => void;
   task?: Task | null;
+  taskDate?: Date; // Date for which this task is being created
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) => {
   const { createTask, updateTask } = useTasks();
   const { showSuccess, showError } = useToastContext();
   const [title, setTitle] = useState('');
@@ -97,12 +98,13 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task }) => {
         });
         showSuccess('Task updated successfully!');
       } else {
-        // Create new task
+        // Create new task with the selected date
         await createTask({
           title: title.trim(),
           description: description.trim(),
           status,
           category: categoryId || null,
+          taskDate: taskDate?.toISOString(),
         });
         showSuccess('Task created successfully!');
       }

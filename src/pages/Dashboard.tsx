@@ -7,8 +7,10 @@ import TaskForm from '../components/tasks/TaskForm';
 import ProfileView from '../components/profile/ProfileView';
 import StatisticsView from '../components/profile/StatisticsView';
 import { CategoryFilter } from '../components/categories';
+import DateNavigator from '../components/tasks/DateNavigator';
 import { useTasks } from '../hooks/useTasks';
 import { useToastContext } from '../context/ToastContext';
+import { formatDateLocal, parseDateLocal } from '../utils/dateUtils';
 import type { Task } from '../types/task.types';
 import type { ViewType } from '../components/layout/Sidebar';
 
@@ -30,6 +32,11 @@ export const Dashboard: React.FC = () => {
       return window.innerWidth >= 768;
     }
     return true;
+  });
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Get today's date in local timezone (not UTC)
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate());
   });
 
   // Fetch tasks on component mount and when category filter changes
@@ -58,11 +65,20 @@ export const Dashboard: React.FC = () => {
     localStorage.setItem('taskapp_sidebar_state', JSON.stringify(isSidebarOpen));
   }, [isSidebarOpen]);
 
-  // Filter tasks based on active view and category selection
+  // Filter tasks based on active view, category selection, and date
   const filteredTasks = useMemo(() => {
     if (activeView === 'profile' || activeView === 'statistics') return [];
     
     let filtered = tasks;
+    
+    // Apply date filter - only show tasks for the selected date
+    // Use local date formatting to avoid timezone issues
+    const selectedDateStr = formatDateLocal(selectedDate);
+    filtered = filtered.filter((task) => {
+      if (!task.taskDate) return false;
+      const taskDateStr = parseDateLocal(task.taskDate);
+      return taskDateStr === selectedDateStr;
+    });
     
     // Apply status filter
     if (activeView !== 'all') {
@@ -80,18 +96,24 @@ export const Dashboard: React.FC = () => {
     }
     
     return filtered;
-  }, [tasks, activeView, selectedCategories]);
+  }, [tasks, activeView, selectedCategories, selectedDate]);
 
-  // Calculate task counts
-  const taskCounts = useMemo(
-    () => ({
-      all: tasks.length,
-      pending: tasks.filter((t) => t.status === 'pending').length,
-      'in-progress': tasks.filter((t) => t.status === 'in-progress').length,
-      completed: tasks.filter((t) => t.status === 'completed').length,
-    }),
-    [tasks]
-  );
+  // Calculate task counts for the selected date
+  const taskCounts = useMemo(() => {
+    const selectedDateStr = formatDateLocal(selectedDate);
+    const tasksForDate = tasks.filter((task) => {
+      if (!task.taskDate) return false;
+      const taskDateStr = parseDateLocal(task.taskDate);
+      return taskDateStr === selectedDateStr;
+    });
+    
+    return {
+      all: tasksForDate.length,
+      pending: tasksForDate.filter((t) => t.status === 'pending').length,
+      'in-progress': tasksForDate.filter((t) => t.status === 'in-progress').length,
+      completed: tasksForDate.filter((t) => t.status === 'completed').length,
+    };
+  }, [tasks, selectedDate]);
 
   const handleCreateTask = () => {
     setSelectedTask(null);
@@ -148,6 +170,10 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+  };
+
   return (
     <Layout
       showSidebar={true}
@@ -180,6 +206,12 @@ export const Dashboard: React.FC = () => {
                 </p>
               </div>
             </div>
+            
+            {/* Date Navigator */}
+            <DateNavigator
+              selectedDate={selectedDate}
+              onDateChange={handleDateChange}
+            />
             
             {/* Category Filter */}
             <CategoryFilter
@@ -273,6 +305,7 @@ export const Dashboard: React.FC = () => {
           isOpen={isTaskFormOpen}
           onClose={handleCloseTaskForm}
           task={selectedTask}
+          taskDate={selectedDate}
         />
       </motion.div>
     </Layout>

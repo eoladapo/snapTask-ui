@@ -9,6 +9,14 @@ import CategoryBadge from '../categories/CategoryBadge';
 import type { Task } from '../../types/task.types';
 import type { Category } from '../../types/category.types';
 
+// Helper function to format date for input (YYYY-MM-DD) in local timezone
+const formatDateForInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface TaskFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,6 +35,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; general?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTaskDate, setSelectedTaskDate] = useState<Date>(taskDate || new Date());
 
   const isEditMode = !!task;
 
@@ -56,15 +65,21 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
       setDescription(task.description);
       setStatus(task.status);
       setCategoryId(task.category || '');
+      // Set the task date if editing
+      if (task.taskDate) {
+        setSelectedTaskDate(new Date(task.taskDate));
+      }
     } else {
       // Reset form for new task
       setTitle('');
       setDescription('');
       setStatus('pending');
       setCategoryId('');
+      // Use the passed taskDate or default to today
+      setSelectedTaskDate(taskDate || new Date());
     }
     setErrors({});
-  }, [task, isOpen]);
+  }, [task, isOpen, taskDate]);
 
   const validateForm = (): boolean => {
     const newErrors: { title?: string } = {};
@@ -95,6 +110,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
           description: description.trim(),
           status,
           category: categoryId || null,
+          taskDate: selectedTaskDate.toISOString(),
         });
         showSuccess('Task updated successfully!');
       } else {
@@ -104,7 +120,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
           description: description.trim(),
           status,
           category: categoryId || null,
-          taskDate: taskDate?.toISOString(),
+          taskDate: selectedTaskDate.toISOString(),
         });
         showSuccess('Task created successfully!');
       }
@@ -125,6 +141,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
     setDescription('');
     setStatus('pending');
     setCategoryId('');
+    setSelectedTaskDate(taskDate || new Date());
     setErrors({});
     onClose();
   };
@@ -188,6 +205,40 @@ const TaskForm: React.FC<TaskFormProps> = ({ isOpen, onClose, task, taskDate }) 
               resize-none
             "
           />
+        </div>
+
+        {/* Task Date Field */}
+        <div className="w-full">
+          <label
+            htmlFor="taskDate"
+            className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
+          >
+            Task Date
+          </label>
+          <input
+            type="date"
+            id="taskDate"
+            value={formatDateForInput(selectedTaskDate)}
+            onChange={(e) => {
+              // Parse the date in local timezone
+              const [year, month, day] = e.target.value.split('-').map(Number);
+              const newDate = new Date(year, month - 1, day);
+              setSelectedTaskDate(newDate);
+            }}
+            className="
+              w-full px-4 py-3
+              rounded-[var(--radius-button)]
+              border-2 border-[var(--color-border)]
+              bg-white
+              text-[var(--color-text-primary)]
+              transition-all duration-200
+              focus:outline-none focus:border-[var(--color-purple-primary)] focus:ring-2 focus:ring-[var(--color-purple-light)] focus:ring-opacity-20
+              cursor-pointer
+            "
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Choose which day this task belongs to
+          </p>
         </div>
 
         {/* Category Selector */}

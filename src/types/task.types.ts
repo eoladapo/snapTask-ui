@@ -21,4 +21,5 @@ export interface UpdateTaskData {
   description?: string;
   status?: 'pending' | 'in-progress' | 'completed';
   category?: string | null;
+  taskDate?: string; // ISO date string
 }

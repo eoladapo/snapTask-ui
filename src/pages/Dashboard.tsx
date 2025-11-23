@@ -56,12 +56,13 @@ export const Dashboard: React.FC = () => {
           await fetchTasks(categoryId, dateStr);
         }
       } catch (err) {
-        // Error is already set in context, just show toast
-        showError('Failed to load tasks. Please try again.');
+        // Only show error toast for actual errors, not for empty results
+        // The TaskList component will handle empty state display
+        console.error('Error loading tasks:', err);
       }
     };
     loadTasks();
-  }, [selectedCategories, selectedDate, fetchTasks, showError]);
+  }, [selectedCategories, selectedDate, fetchTasks]);
 
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -227,27 +228,7 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Error State */}
-        {error && (
-          <div
-            className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
-            role="alert"
-          >
-            <div className="flex items-start gap-2 sm:gap-3">
-              <span className="text-lg sm:text-xl flex-shrink-0">⚠️</span>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold mb-1 text-sm sm:text-base">Error loading tasks</h3>
-                <p className="text-xs sm:text-sm break-words">{error}</p>
-                <button
-                  onClick={() => fetchTasks()}
-                  className="mt-2 text-xs sm:text-sm font-medium text-red-700 hover:text-red-800 underline min-h-[44px] py-2 touch-manipulation"
-                >
-                  Try again
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Content based on active view */}
         <AnimatePresence mode="wait">
@@ -272,6 +253,7 @@ export const Dashboard: React.FC = () => {
                 onStatusChange={handleStatusChange}
                 onRetry={() => fetchTasks()}
                 activeFilter={activeView === 'all' || activeView === 'pending' || activeView === 'in-progress' || activeView === 'completed' ? activeView : 'all'}
+                selectedDate={selectedDate}
               />
             </motion.div>
           )}

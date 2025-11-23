@@ -12,6 +12,7 @@ interface TaskListProps {
   onStatusChange: (id: string, status: Task['status']) => Promise<void>;
   onRetry?: () => void;
   activeFilter?: 'all' | 'pending' | 'in-progress' | 'completed';
+  selectedDate?: Date; // Add selected date to show date-specific messages
 }
 
 const TaskList: React.FC<TaskListProps> = ({
@@ -23,34 +24,80 @@ const TaskList: React.FC<TaskListProps> = ({
   onStatusChange,
   onRetry,
   activeFilter = 'all',
+  selectedDate,
 }) => {
+  
+  // Check if selected date is today, past, or future
+  const getDateContext = () => {
+    if (!selectedDate) return 'today';
+    
+    const today = new Date();
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const selectedLocal = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+    
+    if (selectedLocal.getTime() === todayLocal.getTime()) return 'today';
+    if (selectedLocal.getTime() < todayLocal.getTime()) return 'past';
+    return 'future';
+  };
   
   // Get context-specific empty state messages
   const getEmptyStateContent = () => {
+    const dateContext = getDateContext();
+    
+    // Date-specific messages for 'all' filter
+    if (activeFilter === 'all') {
+      if (dateContext === 'past') {
+        return {
+          emoji: '📅',
+          title: 'No tasks for this day',
+          description: 'You didn\'t create any tasks on this date. Navigate to today to create new tasks.',
+        };
+      }
+      if (dateContext === 'future') {
+        return {
+          emoji: '🔮',
+          title: 'No tasks scheduled',
+          description: 'You haven\'t created any tasks for this date yet. Create tasks for future planning!',
+        };
+      }
+      return {
+        emoji: '📝',
+        title: 'No tasks for today',
+        description: 'Get started by creating your first task. Click the "Create Task" button in the sidebar.',
+      };
+    }
+    
+    // Status-specific messages
     switch (activeFilter) {
       case 'pending':
         return {
           emoji: '⏳',
           title: 'No pending tasks',
-          description: 'You don\'t have any pending tasks at the moment. Create a new task or check other filters.',
+          description: dateContext === 'today' 
+            ? 'You don\'t have any pending tasks for today.' 
+            : 'No pending tasks for this date.',
         };
       case 'in-progress':
         return {
           emoji: '🚀',
           title: 'No tasks in progress',
-          description: 'You don\'t have any tasks in progress. Start working on a pending task to see it here.',
+          description: dateContext === 'today'
+            ? 'You don\'t have any tasks in progress. Start working on a pending task!'
+            : 'No tasks were in progress on this date.',
         };
       case 'completed':
         return {
           emoji: '✅',
           title: 'No completed tasks',
-          description: 'You haven\'t completed any tasks yet. Keep working and mark tasks as complete!',
+          description: dateContext === 'today'
+            ? 'You haven\'t completed any tasks today yet. Keep working!'
+            : 'No tasks were completed on this date.',
         };
       default:
         return {
           emoji: '📝',
-          title: 'No tasks yet',
-          description: 'Get started by creating your first task. Click the "Create Task" button in the sidebar.',
+          title: 'No tasks',
+          description: 'No tasks found for this date and filter.',
         };
     }
   };

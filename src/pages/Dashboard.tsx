@@ -10,7 +10,7 @@ import { CategoryFilter } from '../components/categories';
 import DateNavigator from '../components/tasks/DateNavigator';
 import { useTasks } from '../hooks/useTasks';
 import { useToastContext } from '../context/ToastContext';
-import { formatDateLocal, parseDateLocal } from '../utils/dateUtils';
+import { formatDateLocal } from '../utils/dateUtils';
 import type { Task } from '../types/task.types';
 import type { ViewType } from '../components/layout/Sidebar';
 
@@ -39,18 +39,21 @@ export const Dashboard: React.FC = () => {
     return new Date(today.getFullYear(), today.getMonth(), today.getDate());
   });
 
-  // Fetch tasks on component mount and when category filter changes
+  // Fetch tasks on component mount and when category filter or date changes
   useEffect(() => {
     const loadTasks = async () => {
       try {
-        // If no categories selected or multiple categories selected, fetch all tasks
+        // Format the selected date for the API (YYYY-MM-DD)
+        const dateStr = formatDateLocal(selectedDate);
+        
+        // If no categories selected or multiple categories selected, fetch all tasks for the date
         // We'll filter on the client side for multi-select
         if (selectedCategories.length === 0 || selectedCategories.length > 1) {
-          await fetchTasks();
+          await fetchTasks(undefined, dateStr);
         } else {
           // Single category selected - use server-side filtering
           const categoryId = selectedCategories[0] === 'uncategorized' ? 'null' : selectedCategories[0];
-          await fetchTasks(categoryId);
+          await fetchTasks(categoryId, dateStr);
         }
       } catch (err) {
         // Error is already set in context, just show toast
@@ -58,27 +61,19 @@ export const Dashboard: React.FC = () => {
       }
     };
     loadTasks();
-  }, [selectedCategories, fetchTasks, showError]);
+  }, [selectedCategories, selectedDate, fetchTasks, showError]);
 
   // Save sidebar state to localStorage
   useEffect(() => {
     localStorage.setItem('taskapp_sidebar_state', JSON.stringify(isSidebarOpen));
   }, [isSidebarOpen]);
 
-  // Filter tasks based on active view, category selection, and date
+  // Filter tasks based on active view and category selection
+  // Date filtering is now done on the server side
   const filteredTasks = useMemo(() => {
     if (activeView === 'profile' || activeView === 'statistics') return [];
     
     let filtered = tasks;
-    
-    // Apply date filter - only show tasks for the selected date
-    // Use local date formatting to avoid timezone issues
-    const selectedDateStr = formatDateLocal(selectedDate);
-    filtered = filtered.filter((task) => {
-      if (!task.taskDate) return false;
-      const taskDateStr = parseDateLocal(task.taskDate);
-      return taskDateStr === selectedDateStr;
-    });
     
     // Apply status filter
     if (activeView !== 'all') {
@@ -96,24 +91,17 @@ export const Dashboard: React.FC = () => {
     }
     
     return filtered;
-  }, [tasks, activeView, selectedCategories, selectedDate]);
+  }, [tasks, activeView, selectedCategories]);
 
-  // Calculate task counts for the selected date
+  // Calculate task counts - tasks are already filtered by date from the server
   const taskCounts = useMemo(() => {
-    const selectedDateStr = formatDateLocal(selectedDate);
-    const tasksForDate = tasks.filter((task) => {
-      if (!task.taskDate) return false;
-      const taskDateStr = parseDateLocal(task.taskDate);
-      return taskDateStr === selectedDateStr;
-    });
-    
     return {
-      all: tasksForDate.length,
-      pending: tasksForDate.filter((t) => t.status === 'pending').length,
-      'in-progress': tasksForDate.filter((t) => t.status === 'in-progress').length,
-      completed: tasksForDate.filter((t) => t.status === 'completed').length,
+      all: tasks.length,
+      pending: tasks.filter((t) => t.status === 'pending').length,
+      'in-progress': tasks.filter((t) => t.status === 'in-progress').length,
+      completed: tasks.filter((t) => t.status === 'completed').length,
     };
-  }, [tasks, selectedDate]);
+  }, [tasks]);
 
   const handleCreateTask = () => {
     // Check if trying to create task for past date

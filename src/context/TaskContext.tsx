@@ -11,7 +11,7 @@ interface TaskContextType {
   loading: boolean;
   error: string | null;
   filter: TaskFilter;
-  fetchTasks: (categoryId?: string) => Promise<void>;
+  fetchTasks: (categoryId?: string, taskDate?: string) => Promise<void>;
   createTask: (data: CreateTaskData) => Promise<void>;
   updateTask: (id: string, data: UpdateTaskData) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
@@ -35,12 +35,13 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   /**
    * Fetch all tasks from the API
    * @param categoryId - Optional category ID to filter tasks
+   * @param taskDate - Optional date to filter tasks (YYYY-MM-DD format)
    */
-  const fetchTasks = useCallback(async (categoryId?: string): Promise<void> => {
+  const fetchTasks = useCallback(async (categoryId?: string, taskDate?: string): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
-      const fetchedTasks = await taskService.getAllTasks(categoryId);
+      const fetchedTasks = await taskService.getAllTasks(categoryId, taskDate);
       setTasks(fetchedTasks);
     } catch (err) {
       const errorMessage = getErrorMessage(err);

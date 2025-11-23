@@ -5,10 +5,14 @@ export const taskService = {
   /**
    * Get all tasks for the authenticated user
    * @param categoryId - Optional category ID to filter tasks
+   * @param taskDate - Optional date to filter tasks (YYYY-MM-DD format)
    * @returns Promise with array of tasks
    */
-  async getAllTasks(categoryId?: string): Promise<Task[]> {
-    const params = categoryId ? { category: categoryId } : {};
+  async getAllTasks(categoryId?: string, taskDate?: string): Promise<Task[]> {
+    const params: any = {};
+    if (categoryId) params.category = categoryId;
+    if (taskDate) params.date = taskDate;
+    
     const response = await api.get<{ message: string; tasks: Task[] }>('/task', { params });
     // Backend returns { message, tasks } so we need to extract the tasks array
     return response.data.tasks;

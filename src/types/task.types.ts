@@ -6,6 +6,8 @@ export interface Task {
   user: string;
   category?: string | null;
   taskDate?: string; // ISO date string for which day this task belongs to
+  createdAt?: string; // ISO date string for when task was created
+  updatedAt?: string; // ISO date string for when task was last updated
 }
 
 export interface CreateTaskData {
